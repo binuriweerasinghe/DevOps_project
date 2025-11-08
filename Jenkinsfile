@@ -61,37 +61,52 @@ pipeline {
             }
         }
 
-        stage('Push Images with Retry') {
-            parallel {
-                stage('Push Server Image') {
-                    steps {
-                        script {
-                            retry(3) {
-                                timeout(time: 10, unit: 'MINUTES') {
-                                    sh '''
-                                        echo "Pushing server image to Docker Hub..."
-                                        docker push $SERVER_IMAGE:latest
-                                        echo "Server image pushed successfully"
-                                    '''
-                                }
-                            }
+        stage('Push Images with Advanced Retry') {
+            steps {
+                script {
+                    // Push server image with advanced retry logic
+                    retry(2) {
+                        timeout(time: 8, unit: 'MINUTES') {
+                            sh '''
+                                echo "Pushing server image with retry logic..."
+                                if ! docker push $SERVER_IMAGE:latest; then
+                                    echo "First push attempt failed, waiting and retrying..."
+                                    sleep 30
+                                    docker push $SERVER_IMAGE:latest
+                                fi
+                                echo "Server image pushed successfully"
+                            '''
+                        }
+                    }
+                    
+                    // Push client image with advanced retry logic
+                    retry(2) {
+                        timeout(time: 8, unit: 'MINUTES') {
+                            sh '''
+                                echo "Pushing client image with retry logic..."
+                                if ! docker push $CLIENT_IMAGE:latest; then
+                                    echo "First push attempt failed, waiting and retrying..."
+                                    sleep 30
+                                    docker push $CLIENT_IMAGE:latest
+                                fi
+                                echo "Client image pushed successfully"
+                            '''
                         }
                     }
                 }
-                stage('Push Client Image') {
-                    steps {
-                        script {
-                            retry(3) {
-                                timeout(time: 10, unit: 'MINUTES') {
-                                    sh '''
-                                        echo "Pushing client image to Docker Hub..."
-                                        docker push $CLIENT_IMAGE:latest
-                                        echo "Client image pushed successfully"
-                                    '''
-                                }
-                            }
-                        }
-                    }
+            }
+        }
+
+        stage('Verify Push Success') {
+            steps {
+                script {
+                    sh '''
+                        echo "Verifying images were pushed successfully..."
+                        # Pull the images back to verify they're accessible
+                        docker pull $SERVER_IMAGE:latest
+                        docker pull $CLIENT_IMAGE:latest
+                        echo "Images verified and accessible from Docker Hub"
+                    '''
                 }
             }
         }
@@ -102,44 +117,58 @@ pipeline {
                     sh '''
                         echo "Starting local deployment..."
                         
-                        # Stop and remove existing containers
+                        # Clean up any existing containers
                         docker stop devops_project-server || true
                         docker rm devops_project-server || true
                         docker stop devops_project-client || true
                         docker rm devops_project-client || true
                         
-                        # Run new containers
-                        echo "Starting server container..."
+                        # Deploy server
+                        echo "Deploying server container..."
                         docker run -d --name devops_project-server -p 8080:8080 $SERVER_IMAGE:latest
                         
-                        echo "Starting client container..."
+                        # Wait for server to start
+                        sleep 10
+                        
+                        # Deploy client
+                        echo "Deploying client container..."
                         docker run -d --name devops_project-client -p 3000:3000 $CLIENT_IMAGE:latest
                         
-                        echo "Waiting for containers to start..."
-                        sleep 15
+                        # Wait for client to start
+                        sleep 10
+                        
+                        echo "Local deployment completed"
                     '''
                 }
             }
         }
 
-        stage('Verify Deployment') {
+        stage('Health Check') {
             steps {
                 script {
                     sh '''
-                        echo "Verifying deployment..."
+                        echo "Performing health checks..."
                         
-                        # Check if containers are running
-                        echo "Running containers:"
-                        docker ps --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}" | grep devops_project
+                        # Check container status
+                        echo "=== Container Status ==="
+                        docker ps --filter "name=devops_project" --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}"
                         
-                        # Simple health checks
-                        echo "Testing server accessibility..."
-                        curl -f http://localhost:8080/ || curl -f http://localhost:8080/health || echo "Server health check unavailable but continuing"
+                        # Verify containers are running
+                        if ! docker ps --filter "name=devops_project-server" --format "{{.Names}}" | grep -q devops_project-server; then
+                            echo "❌ Server container is not running"
+                            exit 1
+                        else
+                            echo "✅ Server container is running"
+                        fi
                         
-                        echo "Testing client accessibility..."
-                        curl -f http://localhost:3000/ || echo "Client health check unavailable but continuing"
+                        if ! docker ps --filter "name=devops_project-client" --format "{{.Names}}" | grep -q devops_project-client; then
+                            echo "❌ Client container is not running"
+                            exit 1
+                        else
+                            echo "✅ Client container is running"
+                        fi
                         
-                        echo "Deployment verification completed"
+                        echo "Health checks completed successfully"
                     '''
                 }
             }
@@ -148,29 +177,27 @@ pipeline {
 
     post {
         always {
-            echo "Pipeline status: ${currentBuild.currentResult}"
+            echo "Pipeline completed with status: ${currentBuild.currentResult}"
             sh '''
-                echo "=== Final Container Status ==="
-                docker ps -a --filter "name=devops_project" --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}"
-                echo "=== Application URLs ==="
-                echo "Server: http://localhost:8080"
-                echo "Client: http://localhost:3000"
+                echo "=== Final Status ==="
+                echo "Server URL: http://localhost:8080"
+                echo "Client URL: http://localhost:3000"
+                docker ps --filter "name=devops_project" --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}"
             '''
         }
         success {
-            echo "✅ Pipeline completed successfully!"
+            echo "✅ Pipeline completed successfully! Application is deployed and running."
         }
         failure {
             echo "❌ Pipeline failed!"
             sh '''
-                echo "=== Troubleshooting Information ==="
+                echo "=== Debug Information ==="
                 echo "Recent container logs:"
-                docker logs devops_project-server --tail 20 || echo "No server logs"
-                docker logs devops_project-client --tail 20 || echo "No client logs"
+                docker logs devops_project-server --tail 50 2>/dev/null || echo "No server logs available"
+                docker logs devops_project-client --tail 50 2>/dev/null || echo "No client logs available"
             '''
         }
     }
 }
-
 
 
