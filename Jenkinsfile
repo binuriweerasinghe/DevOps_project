@@ -2,13 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB = credentials('dockerhub') // Jenkins DockerHub credentials ID
         SERVER_IMAGE = "binuriweerasinghe/devops_project-server"
         CLIENT_IMAGE = "binuriweerasinghe/devops_project-client"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -33,49 +31,37 @@ pipeline {
             }
         }
 
-        stage('Push Server Image to Docker Hub') {
+        stage('Push Images to Docker Hub') {
             steps {
                 script {
-                    sh 'echo $DOCKERHUB_PSW | docker login -u $DOCKERHUB_USR --password-stdin'
-                    sh 'docker push $SERVER_IMAGE:latest'
+                    withCredentials([usernamePassword(
+                        credentialsId: '76934304-5037-4b31-bd03-bacb8408e0d7',
+                        passwordVariable: 'DOCKERHUB_PASSWORD',
+                        usernameVariable: 'DOCKERHUB_USERNAME'
+                    )]) {
+                        sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                        sh 'docker push $SERVER_IMAGE:latest'
+                        sh 'docker push $CLIENT_IMAGE:latest'
+                    }
                 }
             }
         }
 
-        stage('Push Client Image to Docker Hub') {
-            steps {
-                script {
-                    sh 'docker push $CLIENT_IMAGE:latest'
-                }
-            }
-        }
-
-        stage('Deploy Server Locally') {
+        stage('Deploy Locally') {
             steps {
                 script {
                     sh '''
                     docker stop devops_project-server || true
                     docker rm devops_project-server || true
-                    docker pull $SERVER_IMAGE:latest
                     docker run -d --name devops_project-server -p 8080:8080 $SERVER_IMAGE:latest
-                    '''
-                }
-            }
-        }
-
-        stage('Deploy Client Locally') {
-            steps {
-                script {
-                    sh '''
+                    
                     docker stop devops_project-client || true
                     docker rm devops_project-client || true
-                    docker pull $CLIENT_IMAGE:latest
                     docker run -d --name devops_project-client -p 3000:3000 $CLIENT_IMAGE:latest
                     '''
                 }
             }
         }
-
     }
 }
 
