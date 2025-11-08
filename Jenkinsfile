@@ -2,37 +2,45 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'main',
-	 	url: 'https://github.com/binuriweerasinghe/DevOps_project.git',
-		credentialsId: 'b0dc98fc-47b0-447a-b99f-33fac62fb97f'
+                    url: 'https://github.com/binuriweerasinghe/DevOps_project.git',
+                    credentialsId: 'b0dc98fc-47b0-447a-b99f-33fac62fb97f'
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building the project...'
-                // Example: for Java project use:
-                // sh 'mvn clean install'
-                // Example: for Node project use:
-                // sh 'npm install'
+                script {
+                    sh 'docker build -t binuriweerasinghe/devops_project:latest .'
+                }
             }
         }
 
-        stage('Test') {
+        stage('Push to Docker Hub') {
             steps {
-                echo 'Running tests...'
-                // Add test commands here
+                script {
+                    sh 'docker push binuriweerasinghe/devops_project:latest'
+                }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Local Server') {
             steps {
-                echo 'Deploy stage - optional'
-                // Add deploy commands if you have any
+                script {
+                    sh '''
+                    docker stop devops_project || true
+                    docker rm devops_project || true
+                    docker pull binuriweerasinghe/devops_project:latest
+                    docker run -d --name devops_project -p 8080:8080 binuriweerasinghe/devops_project:latest
+                    '''
+                }
             }
         }
+
     }
 }
+
 
