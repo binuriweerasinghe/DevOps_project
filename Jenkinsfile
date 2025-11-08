@@ -4,7 +4,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/YourUsername/YourProject.git'
+                git branch: 'main',
+	 	url: 'https://github.com/binuriweerasinghe/DevOps_project.git',
+		credentialsId: 'b0dc98fc-47b0-447a-b99f-33fac62fb97f'
             }
         }
 
