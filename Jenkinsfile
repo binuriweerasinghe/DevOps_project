@@ -34,13 +34,13 @@ pipeline {
         }
 
         stage('Push Server Image to Docker Hub') {
-            steps {
-                script {
-                    sh 'echo $DOCKERHUB_PSW | docker login -u $DOCKERHUB_USR --password-stdin'
-                    sh 'docker push $SERVER_IMAGE:latest'
-                }
-            }
+    steps {
+        script {
+            sh 'docker login -u binuriweerasinghe -p Binuri@123'
+            sh 'docker push $SERVER_IMAGE:latest'
         }
+    }
+}
 
         stage('Push Client Image to Docker Hub') {
             steps {
