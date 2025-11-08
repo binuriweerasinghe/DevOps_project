@@ -52,7 +52,7 @@ pipeline {
                     docker rm devops_project-server devops_project-client || true
 
                     # Run containers
-                    docker run -d --name devops_project-server -p 8080:8080 $SERVER_IMAGE:latest
+                    docker run -d --name devops_project-server -p 8081:8080 $SERVER_IMAGE:latest
                     docker run -d --name devops_project-client -p 3000:3000 $CLIENT_IMAGE:latest
                 '''
             }
