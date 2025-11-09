@@ -1,6 +1,10 @@
+version: "3.9"
+
 services:
   frontend:
-    build: ./client
+    build:
+      context: .
+      dockerfile: Dockerfile-client
     ports:
       - "3000:3000"
     environment:
@@ -10,11 +14,11 @@ services:
       - /app/node_modules
     stdin_open: true
     tty: true
-  
-      
 
   backend:
-    build: ./server
+    build:
+      context: .
+      dockerfile: Dockerfile-server
     ports:
       - "5000:5000"
     environment:
@@ -25,7 +29,6 @@ services:
     depends_on:
       - mongo
     command: npm start
-    
 
   mongo:
     image: mongo:6.0
@@ -36,6 +39,7 @@ services:
 
 volumes:
   mongo-data:
+
 
 
 
