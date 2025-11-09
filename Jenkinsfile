@@ -45,18 +45,28 @@ pipeline {
         }
 
         stage('Deploy Locally') {
-            steps {
-                sh '''
-                    # Stop existing containers if running
-                    docker stop devops_project-server devops_project-client || true
-                    docker rm devops_project-server devops_project-client || true
+    steps {
+        sh '''
+            # Stop existing containers
+            docker stop devops_project-server devops_project-client mongo || true
+            docker rm devops_project-server devops_project-client mongo || true
 
-                    # Run containers
-                    docker run -d --name devops_project-server -p 5000:5000 $SERVER_IMAGE:latest
-                    docker run -d --name devops_project-client -p 3000:3000 $CLIENT_IMAGE:latest
-                '''
-            }
-        }
+            # Create network if not exists
+            docker network inspect devops-net >/dev/null 2>&1 || docker network create devops-net
+
+            # Run Mongo container
+            docker run -d --name mongo --network devops-net -p 27017:27017 mongo:6.0
+
+            # Run server container
+            docker run -d --name devops_project-server --network devops-net -p 5000:5000 \
+                --env-file ./client/.env $SERVER_IMAGE:latest
+
+            # Run client container
+            docker run -d --name devops_project-client --network devops-net -p 3000:3000 \
+                $CLIENT_IMAGE:latest
+        '''
+    }
+}
 
         stage('Health Check') {
             steps {
