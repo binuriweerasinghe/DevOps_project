@@ -9,21 +9,29 @@ terraform {
 
 provider "docker" {}
 
+# -----------------------------
 # Docker network
+# -----------------------------
 resource "docker_network" "devops_network" {
   name = "devops_network"
+  # Terraform will reuse existing network if it exists
 }
 
-# Pull existing server image from Docker Hub
+# -----------------------------
+# Server image from Docker Hub
+# -----------------------------
 resource "docker_image" "server_image" {
   name         = "binuriweerasinghe/devops_project-server:latest"
   keep_locally = true
 }
 
+# -----------------------------
 # Server container
+# -----------------------------
 resource "docker_container" "server" {
-  name  = "devops_project-server"
-  image = docker_image.server_image.name
+  name          = "devops_project-server"
+  image         = docker_image.server_image.name
+  force_destroy = true   # Automatically remove old container if exists
 
   networks_advanced {
     name = docker_network.devops_network.name
@@ -45,16 +53,21 @@ resource "docker_container" "server" {
   ]
 }
 
-# Pull existing client image from Docker Hub
+# -----------------------------
+# Client image from Docker Hub
+# -----------------------------
 resource "docker_image" "client_image" {
   name         = "binuriweerasinghe/devops_project-client:latest"
   keep_locally = true
 }
 
+# -----------------------------
 # Client container
+# -----------------------------
 resource "docker_container" "client" {
-  name  = "devops_project-client"
-  image = docker_image.client_image.name
+  name          = "devops_project-client"
+  image         = docker_image.client_image.name
+  force_destroy = true   # Automatically remove old container if exists
 
   networks_advanced {
     name = docker_network.devops_network.name
@@ -71,10 +84,13 @@ resource "docker_container" "client" {
   ]
 }
 
-# Optional: Mongo container (if you want Terraform to manage it too)
+# -----------------------------
+# Mongo container
+# -----------------------------
 resource "docker_container" "mongo" {
-  name  = "mongo"
-  image = "mongo:6.0"
+  name          = "mongo"
+  image         = "mongo:6.0"
+  force_destroy = true   # Automatically remove old container if exists
 
   networks_advanced {
     name = docker_network.devops_network.name
@@ -82,13 +98,13 @@ resource "docker_container" "mongo" {
 
   ports {
     internal = 27017
-    external = 27018
+    external = 27018   # Avoid conflict with host MongoDB
   }
 
   volumes {
-  host_path      = abspath("${path.module}/mongo-data")
-  container_path = "/data/db"
-}
+    host_path      = abspath("${path.module}/mongo-data")
+    container_path = "/data/db"
+  }
 
   env = [
     "MONGO_INITDB_DATABASE=myDatabase"
@@ -98,6 +114,7 @@ resource "docker_container" "mongo" {
     docker_network.devops_network
   ]
 }
+
 
 
 
