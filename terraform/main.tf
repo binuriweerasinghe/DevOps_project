@@ -29,9 +29,8 @@ resource "docker_image" "server_image" {
 # Server container
 # -----------------------------
 resource "docker_container" "server" {
-  name          = "devops_project-server"
-  image         = docker_image.server_image.name
-  force_destroy = true   # Automatically remove old container if exists
+  name  = "devops_project-server"
+  image = docker_image.server_image.name
 
   networks_advanced {
     name = docker_network.devops_network.name
@@ -46,6 +45,13 @@ resource "docker_container" "server" {
     "MONGODB_URI=mongodb://mongo:27017/myDatabase",
     "HOST=0.0.0.0"
   ]
+
+  lifecycle {
+    # Recreate container if the image changes
+    replace_triggered_by = [
+      docker_image.server_image.id
+    ]
+  }
 
   depends_on = [
     docker_image.server_image,
@@ -65,9 +71,8 @@ resource "docker_image" "client_image" {
 # Client container
 # -----------------------------
 resource "docker_container" "client" {
-  name          = "devops_project-client"
-  image         = docker_image.client_image.name
-  force_destroy = true   # Automatically remove old container if exists
+  name  = "devops_project-client"
+  image = docker_image.client_image.name
 
   networks_advanced {
     name = docker_network.devops_network.name
@@ -76,6 +81,13 @@ resource "docker_container" "client" {
   ports {
     internal = 3000
     external = 3000
+  }
+
+  lifecycle {
+    # Recreate container if the image changes
+    replace_triggered_by = [
+      docker_image.client_image.id
+    ]
   }
 
   depends_on = [
@@ -88,9 +100,8 @@ resource "docker_container" "client" {
 # Mongo container
 # -----------------------------
 resource "docker_container" "mongo" {
-  name          = "mongo"
-  image         = "mongo:6.0"
-  force_destroy = true   # Automatically remove old container if exists
+  name  = "mongo"
+  image = "mongo:6.0"
 
   networks_advanced {
     name = docker_network.devops_network.name
@@ -110,10 +121,16 @@ resource "docker_container" "mongo" {
     "MONGO_INITDB_DATABASE=myDatabase"
   ]
 
+  lifecycle {
+    # Recreate container if something triggers a change
+    replace_triggered_by = []
+  }
+
   depends_on = [
     docker_network.devops_network
   ]
 }
+
 
 
 
