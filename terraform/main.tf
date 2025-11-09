@@ -82,7 +82,7 @@ resource "docker_container" "mongo" {
 
   ports {
     internal = 27017
-    external = 27017
+    external = 27018
   }
 
   volumes {
