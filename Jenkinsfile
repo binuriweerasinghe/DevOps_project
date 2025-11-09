@@ -2,6 +2,17 @@ pipeline {
   agent any
 
   stages {
+
+    stage('Cleanup Docker') {
+  steps {
+    sh '''
+      docker rm -f devops_project-server devops_project-client mongo || true
+      docker network rm devops_network || true
+    '''
+      }
+    }
+
+
     stage('Checkout') {
       steps {
         checkout scm
