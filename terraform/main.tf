@@ -86,9 +86,9 @@ resource "docker_container" "mongo" {
   }
 
   volumes {
-    host_path      = "${path.module}/mongo-data"
-    container_path = "/data/db"
-  }
+  host_path      = abspath("${path.module}/mongo-data")
+  container_path = "/data/db"
+}
 
   env = [
     "MONGO_INITDB_DATABASE=myDatabase"
