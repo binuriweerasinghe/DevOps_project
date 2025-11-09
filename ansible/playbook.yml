@@ -45,7 +45,7 @@
         image: binuriweerasinghe/devops_project-server:latest
         ports:
           - "5000:5000"
-        env_file: "{{ lookup('env','WORKSPACE') }}/.env"
+        env_file: "{{ lookup('env','WORKSPACE') }}/server/.env"
         restart_policy: unless-stopped
 
     - name: Run client container
