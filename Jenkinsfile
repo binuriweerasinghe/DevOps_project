@@ -59,7 +59,7 @@ pipeline {
 
             # Run server container
             docker run -d --name devops_project-server --network devops-net -p 5000:5000 \
-                --env-file ./client/.env $SERVER_IMAGE:latest
+                --env-file ./server/.env $SERVER_IMAGE:latest
 
             # Run client container
             docker run -d --name devops_project-client --network devops-net -p 3000:3000 \
