@@ -3,14 +3,6 @@ pipeline {
 
   stages {
 
-    stages {
-        stage('Clean Workspace') {
-            steps {
-                deleteDir()  // Deletes everything in workspace
-            }
-        }
-
-
     stage('Cleanup Docker') {
   steps {
     sh '''
