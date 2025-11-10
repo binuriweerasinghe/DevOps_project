@@ -13,7 +13,7 @@ export default function Hydration() {
   // Fetch user's hydration entries
   useEffect(() => {
     if (!userId) return;
-    axios.get(`http://localhost:5000/api/hydrations?userId=${userId}`)
+    axios.get(`${process.env.REACT_APP_SERVER_URL}/api/hydrations?userId=${userId}`)
       .then(res => setHydrations(res.data))
       .catch(err => console.error("Error fetching hydrations:", err));
   }, [userId]);
@@ -26,7 +26,7 @@ export default function Hydration() {
     e.preventDefault();
     if (!userId || !form.amount) return;
 
-    axios.post('http://localhost:5000/api/hydrations', { ...form, userId })
+    axios.post('${process.env.REACT_APP_SERVER_URL}/api/hydrations', { ...form, userId })
       .then(res => {
         setHydrations([res.data, ...hydrations]);
         setForm({ amount: '', date: new Date().toISOString().slice(0, 16) });
@@ -39,7 +39,7 @@ export default function Hydration() {
   }
 
   function removeHydration(id) {
-    axios.delete(`/api/hydrations/${id}`)
+    axios.delete(`${process.env.REACT_APP_SERVER_URL}/api/hydrations/${id}`)
       .then(() => {
         setHydrations(hydrations.filter(h => h._id !== id));
         setMessage('✅ Hydration deleted!');
