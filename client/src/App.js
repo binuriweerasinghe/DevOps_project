@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -8,23 +8,45 @@ import Progress from "./pages/Progress";
 import Goals from "./pages/Goals";
 import "./App.css";
 
-// Protected route component
+// Protected route
 function ProtectedRoute({ element }) {
-  const isAuthenticated = !!localStorage.getItem("userId"); // Check if userId exists in localStorage
+  const isAuthenticated = !!localStorage.getItem("userId");
   return isAuthenticated ? element : <Navigate to="/login" />;
 }
 
 export default function App() {
+  const isAuthenticated = !!localStorage.getItem("userId");
+
+  function logout() {
+    localStorage.removeItem("userId");
+    window.location.href = "/login";
+  }
+
   return (
     <Router>
       <nav className="nav">
-        <Link to="/">Dashboard</Link>
-        <Link to="/workouts">Workouts</Link>
-        <Link to="/hydration">Hydration</Link>
-        <Link to="/progress">Progress</Link>
-        <Link to="/goals">Goals</Link>
-        <Link to="/login">Login</Link>
-        <Link to="/signup">Signup</Link>
+        <div className="nav-title">FitTrack</div>
+
+        {isAuthenticated && (
+          <>
+            <NavLink to="/" end>Dashboard</NavLink>
+            <NavLink to="/workouts">Workouts</NavLink>
+            <NavLink to="/hydration">Hydration</NavLink>
+            <NavLink to="/progress">Progress</NavLink>
+            <NavLink to="/goals">Goals</NavLink>
+          </>
+        )}
+
+        <div className="nav-right">
+          {!isAuthenticated ? (
+            <>
+              <NavLink to="/login">Login</NavLink>
+              <NavLink to="/signup">Signup</NavLink>
+            </>
+          ) : (
+            <button onClick={logout}>Logout</button>
+          )}
+        </div>
       </nav>
 
       <main className="container">

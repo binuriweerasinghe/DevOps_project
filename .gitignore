@@ -1,1 +1,21 @@
 terraform/mongo-data/
+# Environment variables
+.env
+
+# MongoDB Docker volume
+mongo-data/
+
+# Terraform state files
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

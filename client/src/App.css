@@ -1,10 +1,243 @@
-.nav { display:flex; gap:12px; padding:12px; border-bottom:1px solid #eee; }
-.nav a { text-decoration:none; color:#0b5ed7; }
-.container { padding:16px; max-width:900px; margin:0 auto; }
-.card { border:1px solid #eee; border-radius:10px; padding:14px; margin-bottom:14px; }
-label { display:block; margin:6px 0 2px; }
-input, select { padding:8px; width:100%; box-sizing:border-box; }
-button { padding:8px 12px; margin-right:8px; cursor:pointer; }
-.table { width:100%; border-collapse:collapse; }
-.table th, .table td { border-bottom:1px solid #f0f0f0; padding:8px; text-align:left; }
+.login-container {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 30px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+.login-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #0b5ed7;
+}
+
+.login-container input {
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  background-color: #0b5ed7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-container button:hover {
+  background-color: #084298;
+}
+
+.login-container p.success {
+  color: green;
+  text-align: center;
+  margin-top: 12px;
+}
+
+.login-container p.error {
+  color: red;
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* Form and card styles */
+.progress-card {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #fff;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+}
+
+.progress-card label {
+  display: block;
+  margin: 10px 0 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+.progress-card input {
+  padding: 10px 12px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.progress-card button {
+  padding: 12px;
+  background-color: #0b5ed7;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.progress-card button:hover {
+  background-color: #084298;
+}
+
+/* Success and error messages */
+.progress-card p.message {
+  margin-top: 12px;
+  font-weight: 500;
+  color: green;
+}
+
+.progress-card p.error {
+  color: red;
+}
+
+/* Chart container */
+.chart-container {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 15px;
+  background-color: #fff;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  height: 300px;
+}
+
+/* Table styling */
+.progress-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+}
+
+.progress-table th,
+.progress-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.progress-table th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+}
+
+.progress-table button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.progress-table button:hover {
+  background-color: #a71d2a;
+}
+
+.dashboard-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 20px;
+  flex: 1 1 180px;
+  text-align: center;
+}
+
+.dashboard-card h4 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.dashboard-card p {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #2575fc;
+}
+
+/* ---------- NAVBAR ---------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #eaeaea;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* App name (optional) */
+.nav-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2575fc;
+  margin-right: 20px;
+}
+
+/* Links */
+.nav a {
+  text-decoration: none;
+  font-weight: 500;
+  color: #444;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav a:hover {
+  background: #f1f5ff;
+  color: #2575fc;
+}
+
+/* Active link */
+.nav a.active {
+  background: #2575fc;
+  color: white;
+}
+
+/* Right-side buttons */
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+/* Logout button */
+.nav button {
+  border: none;
+  background: #ff4d4f;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.nav button:hover {
+  background: #d9363e;
+}
+
+/* Container spacing */
+.container {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
 

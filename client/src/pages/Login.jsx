@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import '../App.css';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const navigate = useNavigate(); // useNavigate hook for navigation
+  const navigate = useNavigate();
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -16,11 +17,9 @@ export default function Login() {
 
     axios.post('http://localhost:5000/api/auth/login', { email, password })
       .then(response => {
-        localStorage.setItem('userId', response.data.userId);  // Store userId in localStorage
+        localStorage.setItem('userId', response.data.userId);
         setSuccessMessage('✅ Login successful! Redirecting...');
-        setTimeout(() => {
-          navigate('/');  // Redirect to the dashboard after a short delay
-        }, 1000); // 1-second delay to show message
+        setTimeout(() => navigate('/'), 1000);
       })
       .catch(error => {
         console.error('Error logging in:', error);
@@ -28,17 +27,72 @@ export default function Login() {
       });
   }
 
+  // Styles
+  const containerStyle = {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    background: 'linear-gradient(to right, #6a11cb, #2575fc)',
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    padding: '20px',
+  };
+
+  const formStyle = {
+    backgroundColor: '#fff',
+    padding: '40px',
+    borderRadius: '12px',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+    width: '100%',
+    maxWidth: '400px',
+    textAlign: 'center',
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '12px 15px',
+    margin: '10px 0',
+    borderRadius: '8px',
+    border: '1px solid #ccc',
+    fontSize: '16px',
+    boxSizing: 'border-box',
+  };
+
+  const buttonStyle = {
+    width: '100%',
+    padding: '12px',
+    marginTop: '10px',
+    borderRadius: '8px',
+    border: 'none',
+    backgroundColor: '#2575fc',
+    color: '#fff',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease',
+  };
+
+  const buttonHoverStyle = {
+    backgroundColor: '#1a5edb',
+  };
+
+  const messageStyle = {
+    marginTop: '10px',
+    fontWeight: '500',
+  };
+
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
+    <div style={containerStyle}>
+      <form style={formStyle} onSubmit={handleSubmit}>
+        <h2 style={{ marginBottom: '20px', color: '#333' }}>Login</h2>
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ display: 'block', marginBottom: '10px', width: '100%' }}
+          style={inputStyle}
         />
         <input
           type="password"
@@ -46,12 +100,19 @@ export default function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ display: 'block', marginBottom: '10px', width: '100%' }}
+          style={inputStyle}
         />
-        <button type="submit" style={{ width: '100%' }}>Login</button>
+        <button
+          type="submit"
+          style={buttonStyle}
+          onMouseOver={e => e.currentTarget.style.backgroundColor = '#1a5edb'}
+          onMouseOut={e => e.currentTarget.style.backgroundColor = '#2575fc'}
+        >
+          Login
+        </button>
+        {successMessage && <p style={{ ...messageStyle, color: 'green' }}>{successMessage}</p>}
+        {errorMessage && <p style={{ ...messageStyle, color: 'red' }}>{errorMessage}</p>}
       </form>
-      {successMessage && <p style={{ color: 'green', marginTop: '10px' }}>{successMessage}</p>}
-      {errorMessage && <p style={{ color: 'red', marginTop: '10px' }}>{errorMessage}</p>}
     </div>
   );
 }

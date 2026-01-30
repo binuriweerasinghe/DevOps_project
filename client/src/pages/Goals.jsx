@@ -5,12 +5,13 @@ export default function Goals() {
   const [waterGoal, setWaterGoal] = useState(2000);
   const [workoutGoal, setWorkoutGoal] = useState(3);
   const [weightGoal, setWeightGoal] = useState("");
+  const [message, setMessage] = useState("");
 
   // Fetch goals from backend on mount
   useEffect(() => {
     axios.get("http://localhost:5000/api/goals")
       .then(res => {
-        const data = res.data;
+        const data = res.data || {};
         setWaterGoal(data.waterGoal || 2000);
         setWorkoutGoal(data.workoutGoal || 3);
         setWeightGoal(data.targetWeight || "");
@@ -18,21 +19,30 @@ export default function Goals() {
       .catch(err => console.error("Error fetching goals:", err));
   }, []);
 
-  // Save goals to backend
+  // Save goals
   function saveGoals() {
     axios.post("http://localhost:5000/api/goals", {
       waterGoal,
       workoutGoal,
       targetWeight: weightGoal
     })
-    .then(res => console.log("Goals updated"))
-    .catch(err => console.error("Error saving goals:", err));
+    .then(() => {
+      setMessage("✅ Goals saved successfully!");
+      setTimeout(() => setMessage(""), 3000);
+    })
+    .catch(err => {
+      console.error("Error saving goals:", err);
+      setMessage("❌ Failed to save goals.");
+      setTimeout(() => setMessage(""), 3000);
+    });
   }
 
   return (
-    <>
+    <div>
       <h2>Goals</h2>
-      <div className="card">
+
+      {/* Card for goals form */}
+      <div className="progress-card">
         <label>Daily Water Goal (ml)</label>
         <input
           type="number"
@@ -57,8 +67,13 @@ export default function Goals() {
         <div style={{ marginTop: "10px" }}>
           <button onClick={saveGoals}>Save Goals</button>
         </div>
+
+        {message && (
+          <p className={`message ${message.includes("✅") ? "success" : "error"}`}>
+            {message}
+          </p>
+        )}
       </div>
-    </>
+    </div>
   );
 }
-
