@@ -5,16 +5,7 @@
     backend_image: "binuriweerasinghe/devops_project-server:{{ build_number }}"
 
   tasks:
-    - name: Remove old Docker versions
-      ansible.builtin.apt:
-        name:
-          - docker
-          - docker.io
-          - containerd
-          - containerd.io
-        state: absent
-        purge: yes
-
+  
     - name: Install dependencies for Docker repo
       ansible.builtin.apt:
         name:
