@@ -76,28 +76,6 @@
         networks:
           - name: devops_network
 
-    - name: Ensure project directory exists on remote host
-      ansible.builtin.file:
-        path: /home/ubuntu/DevOps_project
-        state: directory
-        owner: ubuntu
-        mode: '0755'
-
-    - name: Copy server .env to remote host (so backend container can read it)
-      ansible.builtin.copy:
-        src: server/.env
-        dest: /home/ubuntu/DevOps_project/server/.env
-        owner: ubuntu
-        mode: '0644'
-      # If the file is missing on the control node this will fail; that's intentional so deploy doesn't start without env
-
-    - name: Copy client .env to remote host (so frontend container can read it)
-      ansible.builtin.copy:
-        src: client/.env
-        dest: /home/ubuntu/DevOps_project/client/.env
-        owner: ubuntu
-        mode: '0644'
-
     - name: Run backend container
       community.docker.docker_container:
         name: backend

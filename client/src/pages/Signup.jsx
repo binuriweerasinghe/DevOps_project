@@ -81,7 +81,7 @@ export default function Signup() {
   return (
     <div style={containerStyle}>
       <form style={formStyle} onSubmit={handleSubmit}>
-        <h2 style={{ marginBottom: '20px', color: '#333' }}>Signup</h2>
+        <h2 style={{ marginBottom: '20px', color: '#333' }}>Binuri</h2>
         <input
           type="text"
           placeholder="Username"
