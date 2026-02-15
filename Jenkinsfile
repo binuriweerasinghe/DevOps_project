@@ -1,53 +1,87 @@
 pipeline {
-  agent any
+    agent any
 
-  stages {
-
-    stage('Cleanup Docker') {
-  steps {
-    sh '''
-      docker rm -f devops_project-server devops_project-client mongo || true
-      docker network rm devops_network || true
-    '''
-      }
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('76934304-5037-4b31-bd03-bacb8408e0d7') 
+        SSH_CREDENTIALS = credentials('ansible-ssh')             
+        REMOTE_HOST = '3.142.180.163'
+        REMOTE_USER = 'ubuntu' 
     }
 
+    stages {
 
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
+        stage('Checkout Code') {
+    steps {
+        script {
+            // Get the workspace
+            def workspace = pwd()
 
-    stage('Terraform Apply') {
-      steps {
-        sh '''
-          cd terraform
-          terraform init
-          terraform apply -auto-approve
-        '''
-      }
-    }
+            // Clean everything except mongo-data (quote the path to handle spaces)
+            sh """find "${workspace}" -mindepth 1 -maxdepth 1 ! -name 'mongo-data' -exec rm -rf {} +"""
 
-    stage('Run Ansible Playbook') {
-      steps {
-        sh '''
-          ansible-playbook ansible/playbook.yml
-        '''
-      }
+            // Checkout code
+            git branch: 'main', url: 'https://github.com/binuriweerasinghe/DevOps_project'
+        }
     }
-  }
+}
 
-  post {
-    success {
-      echo 'Deployment Completed Successfully!'
+stage('Build Docker Images') {
+    steps {
+        script {
+            sh '''
+            docker build \
+              -f "${WORKSPACE}/Dockerfile-client" \
+              -t binuriweerasinghe/devops_project-client:${BUILD_NUMBER} \
+              "${WORKSPACE}/client"
+
+            docker build \
+              -f "${WORKSPACE}/Dockerfile-server" \
+              -t binuriweerasinghe/devops_project-server:${BUILD_NUMBER} \
+              "${WORKSPACE}/server"
+            '''
+        }
     }
-    failure {
-      echo 'Pipeline Failed.'
-    }
-  }
 }
 
 
 
 
+        stage('Push Docker Images') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: '76934304-5037-4b31-bd03-bacb8408e0d7',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PASS'
+        )]) {
+            sh '''
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            docker push binuriweerasinghe/devops_project-client:${BUILD_NUMBER}
+            docker push binuriweerasinghe/devops_project-server:${BUILD_NUMBER}
+            '''
+        }
+    }
+}
+
+        stage('Deploy to EC2 via Ansible') {
+            steps {
+                sshagent(['ansible-ssh']) {
+                    sh """
+ansible-playbook -i ${REMOTE_HOST}, ansible/playbook.yml \
+-u ${REMOTE_USER} \
+-e "build_number=${env.BUILD_NUMBER}" \
+--ssh-extra-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+"""
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed!"
+        }
+    }
+}

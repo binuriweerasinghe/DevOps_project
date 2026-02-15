@@ -1,58 +1,110 @@
-- hosts: localhost
-  connection: local
+- hosts: all
+  become: yes
   vars:
-    dockerhub_username: "{{ lookup('env','DOCKER_USER') }}"
-    dockerhub_password: "{{ lookup('env','DOCKER_PASS') }}"
+    frontend_image: "binuriweerasinghe/devops_project-client:{{ build_number }}"
+    backend_image: "binuriweerasinghe/devops_project-server:{{ build_number }}"
 
   tasks:
-    - name: Docker login
-      community.docker.docker_login:
-        username: "{{ dockerhub_username }}"
-        password: "{{ dockerhub_password }}"
+    - name: Remove old Docker versions
+      ansible.builtin.apt:
+        name:
+          - docker
+          - docker.io
+          - containerd
+          - containerd.io
+        state: absent
+        purge: yes
 
-    - name: Pull server Docker image
-      community.docker.docker_image:
-        name: binuriweerasinghe/devops_project-server:latest
-        source: pull
+    - name: Install dependencies for Docker repo
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: yes
 
-    - name: Pull client Docker image
-      community.docker.docker_image:
-        name: binuriweerasinghe/devops_project-client:latest
-        source: pull
+    - name: Add Docker GPG key
+      ansible.builtin.shell: |
+        mkdir -p /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
 
-    - name: Stop old containers
+    - name: Add Docker repository
+      ansible.builtin.shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+        https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+        | tee /etc/apt/sources.list.d/docker.list > /dev/null
+      args:
+        creates: /etc/apt/sources.list.d/docker.list
+
+    - name: Install Docker from official repo
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Ensure Docker service is started and enabled
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create Docker network
+      community.docker.docker_network:
+        name: devops_network
+        state: present
+
+    - name: Remove old containers
       community.docker.docker_container:
         name: "{{ item }}"
         state: absent
+        force_kill: yes
       loop:
-        - devops_project-server
-        - devops_project-client
+        - frontend
+        - backend
         - mongo
 
-    - name: Run MongoDB container
+    - name: Run Mongo container
       community.docker.docker_container:
         name: mongo
         image: mongo:6.0
+        state: started
+        restart_policy: always
         ports:
           - "27018:27017"
         volumes:
-          - "{{ lookup('env','WORKSPACE') }}/mongo-data:/data/db"
-        restart_policy: unless-stopped
+          - /home/ubuntu/DevOps_project/mongo-data:/data/db
+        networks:
+          - name: devops_network
 
-    - name: Run server container
+    - name: Run backend container
       community.docker.docker_container:
-        name: devops_project-server
-        image: binuriweerasinghe/devops_project-server:latest
+        name: backend
+        image: "{{ backend_image }}"
+        state: started
+        restart_policy: always
         ports:
           - "5000:5000"
-        env_file: "{{ lookup('env','WORKSPACE') }}/server/.env"
-        restart_policy: unless-stopped
+        env_file: /home/ubuntu/DevOps_project/server/.env
+        networks:
+          - name: devops_network
 
-    - name: Run client container
+    - name: Run frontend container
       community.docker.docker_container:
-        name: devops_project-client
-        image: binuriweerasinghe/devops_project-client:latest
+        name: frontend
+        image: "{{ frontend_image }}"
+        state: started
+        restart_policy: always
         ports:
           - "3000:3000"
-        env_file: "{{ lookup('env','WORKSPACE') }}/client/.env"
-        restart_policy: unless-stopped
+        env_file: /home/ubuntu/DevOps_project/client/.env
+        networks:
+          - name: devops_network
