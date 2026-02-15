@@ -85,7 +85,7 @@ export default function Login() {
   return (
     <div style={containerStyle}>
       <form style={formStyle} onSubmit={handleSubmit}>
-        <h2 style={{ marginBottom: '20px', color: '#333' }}>Login</h2>
+        <h2 style={{ marginBottom: '20px', color: '#333' }}>ogin</h2>
         <input
           type="email"
           placeholder="Email"
